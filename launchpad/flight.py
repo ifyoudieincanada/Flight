@@ -54,7 +54,7 @@ def main():
 	LP = launchpad.Launchpad()  # creates a Launchpad instance (first Launchpad found)
 	LP.Open()                   # start it
 
-	drone = libardrone.ARDrone()
+	drone = libardrone.ARDrone("192.168.1.1")
 
 	f = open(r'\\.\pipe\flightPipe', 'r+b', 0) # opens FIFO for reading
 

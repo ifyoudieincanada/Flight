@@ -50,7 +50,7 @@ class ARDrone(object):
     navdata.
     """
 
-    def __init__(self):
+    def __init__(self, ip):
         self.seq_nr = 1
         self.timer_t = 0.2
         self.com_watchdog_timer = threading.Timer(self.timer_t, self.commwdg)
@@ -67,6 +67,7 @@ class ARDrone(object):
         self.image = ""
         self.navdata = dict()
         self.time = 0
+        self.ip
 
     def takeoff(self):
         """Make the drone takeoff."""
@@ -139,7 +140,7 @@ class ARDrone(object):
         """
         self.lock.acquire()
         self.com_watchdog_timer.cancel()
-        cmd(self.seq_nr, *args, **kwargs)
+        cmd(self.seq_nr, *args, **kwargs, self.ip)
         self.seq_nr += 1
         self.com_watchdog_timer = threading.Timer(self.timer_t, self.commwdg)
         self.com_watchdog_timer.start()
@@ -169,7 +170,7 @@ class ARDrone(object):
         self.ipc_thread.stop()
         self.ipc_thread.join()
         self.lock.release()
-        
+
     def move(self,lr, fb, vv, va):
         """Makes the drone move (translate/rotate).
 
@@ -178,7 +179,7 @@ class ARDrone(object):
 	   rb -- front-back tilt: float [-1..1] negative: forwards, positive:
         	backwards
 	   vv -- vertical speed: float [-1..1] negative: go down, positive: rise
-	   va -- angular speed: float [-1..1] negative: spin left, positive: spin 
+	   va -- angular speed: float [-1..1] negative: spin left, positive: spin
         	right"""
         self.at(at_pcmd, True, lr, fb, vv, va)
 
@@ -187,7 +188,7 @@ class ARDrone(object):
 ### Low level AT Commands
 ###############################################################################
 
-def at_ref(seq, takeoff, emergency=False):
+def at_ref(seq, takeoff, ip, emergency=False):
     """
     Basic behaviour of the drone: take-off/landing, emergency stop/reset)
 
@@ -201,9 +202,9 @@ def at_ref(seq, takeoff, emergency=False):
         p += 0b1000000000
     if emergency:
         p += 0b0100000000
-    at("REF", seq, [p])
+    at("REF", seq, [p], ip)
 
-def at_pcmd(seq, progressive, lr, fb, vv, va):
+def at_pcmd(seq, progressive, lr, fb, vv, va, ip):
     """
     Makes the drone move (translate/rotate).
 
@@ -215,24 +216,24 @@ def at_pcmd(seq, progressive, lr, fb, vv, va):
     rb -- front-back tilt: float [-1..1] negative: forwards, positive:
         backwards
     vv -- vertical speed: float [-1..1] negative: go down, positive: rise
-    va -- angular speed: float [-1..1] negative: spin left, positive: spin 
+    va -- angular speed: float [-1..1] negative: spin left, positive: spin
         right
 
     The above float values are a percentage of the maximum speed.
     """
     p = 1 if progressive else 0
-    at("PCMD", seq, [p, float(lr), float(fb), float(vv), float(va)])
+    at("PCMD", seq, [p, float(lr), float(fb), float(vv), float(va)], ip)
 
-def at_ftrim(seq):
+def at_ftrim(seq, ip):
     """
     Tell the drone it's lying horizontally.
 
     Parameters:
     seq -- sequence number
     """
-    at("FTRIM", seq, [])
+    at("FTRIM", seq, [], ip)
 
-def at_zap(seq, stream):
+def at_zap(seq, stream, ip):
     """
     Selects which video stream to send on the video UDP port.
 
@@ -241,20 +242,20 @@ def at_zap(seq, stream):
     stream -- Integer: video stream to broadcast
     """
     # FIXME: improve parameters to select the modes directly
-    at("ZAP", seq, [stream])
+    at("ZAP", seq, [stream], ip)
 
-def at_config(seq, option, value):
+def at_config(seq, option, value, ip):
     """Set configuration parameters of the drone."""
-    at("CONFIG", seq, [str(option), str(value)])
+    at("CONFIG", seq, [str(option), str(value)], ip)
 
-def at_comwdg(seq):
+def at_comwdg(seq, ip):
     """
     Reset communication watchdog.
     """
     # FIXME: no sequence number
-    at("COMWDG", seq, [])
+    at("COMWDG", seq, [], ip)
 
-def at_aflight(seq, flag):
+def at_aflight(seq, flag, ip):
     """
     Makes the drone fly autonomously.
 
@@ -262,7 +263,7 @@ def at_aflight(seq, flag):
     seq -- sequence number
     flag -- Integer: 1: start flight, 0: stop flight
     """
-    at("AFLIGHT", seq, [flag])
+    at("AFLIGHT", seq, [flag], ip)
 
 def at_pwm(seq, m1, m2, m3, m4):
     """
@@ -290,7 +291,7 @@ def at_led(seq, anim, f, d):
     """
     pass
 
-def at_anim(seq, anim, d):
+def at_anim(seq, anim, d, ip):
     """
     Makes the drone execute a predefined movement (animation).
 
@@ -299,9 +300,9 @@ def at_anim(seq, anim, d):
     anim -- Integer: animation to play
     d -- Integer: total duration in sections of the animation
     """
-    at("ANIM", seq, [anim, d])
+    at("ANIM", seq, [anim, d], ip)
 
-def at(command, seq, params):
+def at(command, seq, params, ip):
     """
     Parameters:
     command -- the command
@@ -318,7 +319,7 @@ def at(command, seq, params):
             param_str += ',"'+p+'"'
     msg = "AT*%s=%i%s\r" % (command, seq, param_str)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.sendto(msg, ("192.168.1.1", ARDRONE_COMMAND_PORT))
+    sock.sendto(msg, (ip, ARDRONE_COMMAND_PORT))
 
 def f2i(f):
     """Interpret IEEE-754 floating-point value as signed integer.
@@ -399,7 +400,7 @@ if __name__ == "__main__":
     import termios
     import fcntl
     import os
-    
+
     fd = sys.stdin.fileno()
 
     oldterm = termios.tcgetattr(fd)
@@ -452,4 +453,3 @@ if __name__ == "__main__":
         termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
         fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
         drone.halt()
-
