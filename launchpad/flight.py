@@ -39,7 +39,7 @@ def handleButton(but, drone, currentV, currentY):
 	elif (but == (8, 5, True)):
 		drone.land()
 
-	drone.at(drone.at_pcmd, True, currentV[0], currentV[1], currentV[2], currentY)
+	drone.at(libardrone.at_pcmd, True, currentV[0], currentV[1], currentV[2], currentY)
 	return currentV, currentY
 
 def stabilizeParrot(drone):
@@ -65,9 +65,9 @@ def main():
 
 	drone = libardrone.ARDrone("192.168.1.1")
 
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.bind(('localhost', 4500))
-	s.listen(3)
+	# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	# s.bind(('localhost', 4500))
+	# s.listen(3)
 
 	#LP.LedCtrlString( 'g', 0, 3, -1 )
 	#LP.LedCtrlString( 'g', 3, 0, 1 )
