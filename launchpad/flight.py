@@ -4,10 +4,8 @@ from pygame import time
 import time
 import struct
 import json
-
-# provides arm_and_takeoff(), send_nav_velocity(), and condition_yaw()
 import libardrone
-
+import socket
 
 def handleButton(but, drone, currentV, currentY):
 	scale = 0.2 #what scale is this (from example)
@@ -49,6 +47,17 @@ def stabilizeParrot():
 	drone.hover()
 	return [0, 0, 0], 0
 
+def readFromSocket(s):
+	chunks = []
+	bytes_recd = 0
+	while bytes_recd < MSGLEN:
+		chunk = s.recv(min(MSGLEN - bytes_recd, 2048))
+		if chunk == '':
+			raise RuntimeError('socket connection broken')
+		chunks.append(chunk)
+		bytes_recd = bytes_recd + len(chunk)
+	return ''.join(chunks)
+
 def main():
 
 	LP = launchpad.Launchpad()  # creates a Launchpad instance (first Launchpad found)
@@ -56,7 +65,9 @@ def main():
 
 	drone = libardrone.ARDrone("192.168.1.1")
 
-	f = open(r'\\.\pipe\flightPipe', 'r+b', 0) # opens FIFO for reading
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.bind(('localhost'), 4500)
+	s.listen(3)
 
 	#LP.LedCtrlString( 'g', 0, 3, -1 )
 	#LP.LedCtrlString( 'g', 3, 0, 1 )
@@ -71,10 +82,7 @@ def main():
 	while True:
 		time.wait( 10 )
 
-		# Read from the fifo
-		n = struct.unpack('I', f.read(4))[0]    # Read str length
-		j = json.loads(f.read(n))               # Read str as JSON
-		f.seek(0)                               # Important!!!
+		j = json.loads(readFromSocket(s))               # Read socket as json
 
 		but = LP.ButtonStateXY()
 		if but != []:
