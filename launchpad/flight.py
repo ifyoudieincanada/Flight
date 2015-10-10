@@ -6,15 +6,21 @@ import struct
 import json
 
 # provides arm_and_takeoff(), send_nav_velocity(), and condition_yaw()
-import droneInteraction
+import libardrone
 
 
-def handleButton(but, currentV, currentY):
-	scale = 2 #what scale is this (from example)
-	vert = 0.5 #what scale is this (from example)
+def handleButton(but, drone, currentV, currentY):
+	scale = 0.2 #what scale is this (from example)
+	vert = 0.05 #what scale is this (from example)
 	if (but[1] > 0 and but[0] < 8):
-		sX = (but[0] - 4)*scale
-		sY = (but[1] - 4)*scale
+		if (but[0] < 4):
+			sX = (but[0] - 4)*scale
+		else:
+			sX = (but[0] - 3)*scale
+		if (but[1] < 5):
+			sY = (but[1] - 5)*scale
+		else:
+			sY = (but[1] - 4)*scale
 		if (sX == currentV[0] and sY == currentV[1]):
 			currentV[0] = 0
 			currentV[1] = 0
@@ -30,22 +36,25 @@ def handleButton(but, currentV, currentY):
 	elif ((but[0] == 2 or but[0] == 3) and but[1] == 0):
 		currentY = ((but[0]-2)*2-1) + currentY
 	elif (but == (4, 0, True)):
-		currentV = stabilizeParrot()
+		currentV, currentY = stabilizeParrot()
 	elif (but == (8, 8, True)):
-		droneInteraction.arm_and_takeoff()
+		drone.takeoff()
+	elif (but == (8, 5, True)):
+		drone.land()
 
-	droneInteraction.condition_yaw(currentY)
-	droneInteraction.send_nav_velocity(currentV[0], currentV[1], currentV[2])
+	drone.at(drone.at_pcmd, True, curretyV[0], currentV[1], currentV[2], currentY)
 	return currentV, currentY
 
 def stabilizeParrot():
-	droneInteraction.send_nav_velocity(0, 0, 0)
-	return [0, 0, 0]
+	drone.hover()
+	return [0, 0, 0], 0
 
 def main():
 
 	LP = launchpad.Launchpad()  # creates a Launchpad instance (first Launchpad found)
 	LP.Open()                   # start it
+
+	drone = libardrone.ARDrone()
 
 	f = open(r'\\.\pipe\flightPipe', 'r+b', 0) # opens FIFO for reading
 
@@ -75,7 +84,7 @@ def main():
 				LP.LedCtrlXY( but[0], but[1], 0, 3 )
 				print( but )
 				if but[2]:
-					current, currentY = handleButton(but, currentV, currentY)
+					current, currentY = handleButton(but, drone, currentV, currentY)
 				if but[2] == False:
 					LP.LedCtrlXY( but[0], but[1], 0, 0 )
 
