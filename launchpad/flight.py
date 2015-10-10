@@ -36,7 +36,11 @@ def handleButton(but, drone, currentV, currentY):
 			currentV[2] = sZ
                 print 'change height'
 	elif ((but[0] == 2 or but[0] == 3) and but[1] == 0):
-		currentY = ((but[0]-2)*2-1) + currentY
+		sR = ((but[0]-2)*2-1)*scale
+                if sR == currentY:
+                        currentY = 0
+                else:
+                        currentY = sR
                 print 'change yaw'
 	elif (but == [4, 0, True]):
 		currentV, currentY = stabilizeParrot(drone)
