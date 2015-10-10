@@ -15,7 +15,7 @@ def handleButton(but, currentV, currentY):
 	if (but[1] > 0 and but[0] < 8):
 		sX = (but[0] - 4)*scale
 		sY = (but[1] - 4)*scale
-		if (sX == currentV[0] && sY == currentV[1]):
+		if (sX == currentV[0] and sY == currentV[1]):
 			currentV[0] = 0
 			currentV[1] = 0
 		else:
@@ -31,13 +31,15 @@ def handleButton(but, currentV, currentY):
 		currentY = ((but[0]-2)*2-1) + currentY
 	elif (but == (4, 0, True)):
 		currentV = stabilizeParrot()
+	elif (but == (8, 8, True)):
+		droneInteraction.arm_and_takeoff()
 
-    condition_yaw(currentY)
-	send_nav_velocity(currentV[0], currentV[1], currentV[2])
+	droneInteraction.condition_yaw(currentY)
+	droneInteraction.send_nav_velocity(currentV[0], currentV[1], currentV[2])
 	return currentV, currentY
 
 def stabilizeParrot():
-	send_nav_velocity(0, 0, 0)
+	droneInteraction.send_nav_velocity(0, 0, 0)
 	return [0, 0, 0]
 
 def main():
