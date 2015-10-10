@@ -8,7 +8,7 @@ import libardrone
 
 def handleButton(but, drone, currentV, currentY):
 	scale = 0.2 #what scale is this (from example)
-	vert = 0.05 #what scale is this (from example)
+	vert = 0.4 #what scale is this (from example)
 
         # print 'navdata: ', drone.navdata
 
