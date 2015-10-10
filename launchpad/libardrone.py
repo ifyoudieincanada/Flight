@@ -67,7 +67,7 @@ class ARDrone(object):
         self.image = ""
         self.navdata = dict()
         self.time = 0
-        self.ip
+        self.ip = ip
 
     def takeoff(self):
         """Make the drone takeoff."""
@@ -140,7 +140,7 @@ class ARDrone(object):
         """
         self.lock.acquire()
         self.com_watchdog_timer.cancel()
-        cmd(self.seq_nr, *args, **kwargs, self.ip)
+        cmd(self.seq_nr, self.ip, *args, **kwargs)
         self.seq_nr += 1
         self.com_watchdog_timer = threading.Timer(self.timer_t, self.commwdg)
         self.com_watchdog_timer.start()
@@ -188,7 +188,7 @@ class ARDrone(object):
 ### Low level AT Commands
 ###############################################################################
 
-def at_ref(seq, takeoff, ip, emergency=False):
+def at_ref(seq, ip, takeoff, emergency=False):
     """
     Basic behaviour of the drone: take-off/landing, emergency stop/reset)
 
@@ -204,7 +204,7 @@ def at_ref(seq, takeoff, ip, emergency=False):
         p += 0b0100000000
     at("REF", seq, [p], ip)
 
-def at_pcmd(seq, progressive, lr, fb, vv, va, ip):
+def at_pcmd(seq, ip, progressive, lr, fb, vv, va):
     """
     Makes the drone move (translate/rotate).
 
@@ -233,7 +233,7 @@ def at_ftrim(seq, ip):
     """
     at("FTRIM", seq, [], ip)
 
-def at_zap(seq, stream, ip):
+def at_zap(seq, ip, stream):
     """
     Selects which video stream to send on the video UDP port.
 
@@ -244,7 +244,7 @@ def at_zap(seq, stream, ip):
     # FIXME: improve parameters to select the modes directly
     at("ZAP", seq, [stream], ip)
 
-def at_config(seq, option, value, ip):
+def at_config(seq, ip, option, value):
     """Set configuration parameters of the drone."""
     at("CONFIG", seq, [str(option), str(value)], ip)
 
@@ -255,7 +255,7 @@ def at_comwdg(seq, ip):
     # FIXME: no sequence number
     at("COMWDG", seq, [], ip)
 
-def at_aflight(seq, flag, ip):
+def at_aflight(seq, ip, flag):
     """
     Makes the drone fly autonomously.
 
@@ -291,7 +291,7 @@ def at_led(seq, anim, f, d):
     """
     pass
 
-def at_anim(seq, anim, d, ip):
+def at_anim(seq, ip, anim, d):
     """
     Makes the drone execute a predefined movement (animation).
 
