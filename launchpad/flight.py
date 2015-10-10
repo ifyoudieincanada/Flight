@@ -1,13 +1,16 @@
 import random
 import launchpad
 from pygame import time
-
-
+import time
+import struct
+import json
 
 def main():
 
 	LP = launchpad.Launchpad()  # creates a Launchpad instance (first Launchpad found)
 	LP.Open()                   # start it
+
+	f = open(r'\\.\pipe\wrist', 'r+b', 0) # opens FIFO for reading
 
 	#LP.LedCtrlString( 'g', 0, 3, -1 )
 	#LP.LedCtrlString( 'g', 3, 0, 1 )
@@ -18,6 +21,12 @@ def main():
 	print "Checking for presses. 'arm' to end."
 	while True:
 		time.wait( 10 )
+
+		# Read from the fifo
+	    n = struct.unpack('I', f.read(4))[0]    # Read str length
+	    j = json.loads(f.read(n))               # Read str as JSON
+	    f.seek(0)                               # Important!!!
+
 		but = LP.ButtonStateXY()
 		if but != []:
 
