@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# CODE FROM:
+# https://github.com/Parrot-Developers/dronekit-python/blob/master/examples/guided_set_speed_yaw/guided_set_speed_yaw.py
+
 import time
 from droneapi.lib import VehicleMode, Location
 from pymavlink import mavutil
@@ -41,7 +44,7 @@ def arm_and_takeoff():
     time.sleep(1)
 
     print "Taking off!"
-    vehicle.commands.takeoff(5) # Take off to 5m height
+    vehicle.commands.takeoff(2) # Take off to 2m height
     vehicle.flush()
     time.sleep(10)
 

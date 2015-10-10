@@ -9,30 +9,36 @@ import json
 import droneInteraction
 
 
-def handleButton(but, current):
-	scale = 128
-	if (but[1] > 0 && but[0] < 8):
-		current[0] = (but[0] - 4)*scale/4
-		current[1] = (but[1] - 4)*scale/4
-	elif (but[0] < 2 && but[1] == 0):
-		current[2] = -(but[0]*2-1)*scale/4
+def handleButton(but, currentV, currentY):
+	scale = 2 #what scale is this (from example)
+	vert = 0.5 #what scale is this (from example)
+	if (but[1] > 0 and but[0] < 8):
+		sX = (but[0] - 4)*scale
+		sY = (but[1] - 4)*scale
+		if (sX == currentV[0] && sY == currentV[1]):
+			currentV[0] = 0
+			currentV[1] = 0
+		else:
+			currentV[0] = sX
+			currentV[1] = sY
+	elif (but[0] < 2 and but[1] == 0):
+		sZ = -(but[0]*2-1)*vert
+		if (sZ == currentV[2]):
+			currentV[2] = 0
+		else:
+			currentV[2] = sZ
+	elif ((but[0] == 2 or but[0] == 3) and but[1] == 0):
+		currentY = ((but[0]-2)*2-1) + currentY
 	elif (but == (4, 0, True)):
-		current = stabilizeParrot()
+		currentV = stabilizeParrot()
 
-	send_nav_velocity(current[0], current[1], current[2])
-	return current
+    condition_yaw(currentY)
+	send_nav_velocity(currentV[0], currentV[1], currentV[2])
+	return currentV, currentY
 
 def stabilizeParrot():
 	send_nav_velocity(0, 0, 0)
 	return [0, 0, 0]
-
-def stabilizePrev(but, current):
-	if (but[1] == 0):
-		send_nav_velocity(current[0], current[1], 0)
-		return [current[0], current[1], 0]
-	else:
-		send_nav_velocity(0, 0, current[2])
-		return [0, 0, current[2]]
 
 def main():
 
@@ -47,9 +53,8 @@ def main():
 	#controller, sequencer, stable
 	mode = "controller"
 
-	current = [0, 0, 0]
-
-	prevBut = LP.ButtonStateXY()
+	currentV = [0, 0, 0]
+	currentY = 0
 
 	print "Checking for presses. 'arm' to end."
 	while True:
@@ -68,12 +73,7 @@ def main():
 				LP.LedCtrlXY( but[0], but[1], 0, 3 )
 				print( but )
 				if but[2]:
-					if but != prevBut:
-						current = handleButton(but, current)
-					else:
-						if ((but[0] < 8 and but[1] > 0) or (but[0] < 2 and but[1] == 0)):
-							current = stabilizePrev(but, current)
-					prevBut = but
+					current, currentY = handleButton(but, currentV, currentY)
 				if but[2] == False:
 					LP.LedCtrlXY( but[0], but[1], 0, 0 )
 
@@ -83,7 +83,7 @@ def main():
 
 				LP.LedCtrlXY(6, 0, 3, 0)
 			if mode == "stable":
-				#stabilize
+				currentV = stabilizeParrot()
 
 				LP.LedCtrlXY(4, 0, 3, 0)
 
@@ -100,7 +100,7 @@ def main():
 				LP.LedCtrlXY(5, 0, 0, 0)
 				LP.LedCtrlXY(6, 0, 0, 0)
 				mode = "stable"
-			if but == [ 8, 8, True ]:
+			if but == [ 5, 8, True ]:
 				break
 
 
