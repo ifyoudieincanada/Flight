@@ -51,6 +51,7 @@ class ARDrone(object):
     """
 
     def __init__(self, ip):
+        self.ip = ip
         self.seq_nr = 1
         self.timer_t = 0.2
         self.com_watchdog_timer = threading.Timer(self.timer_t, self.commwdg)
@@ -67,7 +68,6 @@ class ARDrone(object):
         self.image = ""
         self.navdata = dict()
         self.time = 0
-        self.ip = ip
 
     def takeoff(self):
         """Make the drone takeoff."""
