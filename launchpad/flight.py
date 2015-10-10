@@ -45,7 +45,7 @@ def main():
 	LP = launchpad.Launchpad()  # creates a Launchpad instance (first Launchpad found)
 	LP.Open()                   # start it
 
-	f = open(r'\\.\pipe\wrist', 'r+b', 0) # opens FIFO for reading
+	f = open(r'\\.\pipe\flightPipe', 'r+b', 0) # opens FIFO for reading
 
 	#LP.LedCtrlString( 'g', 0, 3, -1 )
 	#LP.LedCtrlString( 'g', 3, 0, 1 )
