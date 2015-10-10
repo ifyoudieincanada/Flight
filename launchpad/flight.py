@@ -10,7 +10,7 @@ def handleButton(but, drone, currentV, currentY):
 	scale = 0.2 #what scale is this (from example)
 	vert = 0.05 #what scale is this (from example)
 
-        print 'navdata: ', drone.navdata
+        # print 'navdata: ', drone.navdata
 
 	if (but[1] > 0 and but[0] < 8):
 		if (but[0] < 4):
@@ -46,13 +46,13 @@ def handleButton(but, drone, currentV, currentY):
                         print('taking off')
 		        drone.takeoff() # REPEAT UNTIL TAKEOFF
                         time.wait(16)
-                print 'takeoff'
+                print 'takeoff successful'
 	elif (but == [8, 5, True]):
                 while drone.navdata['drone_state']['fly_mask'] == 1:
-                        print('taking off')
+                        print('landing')
 		        drone.land() # REPEAT UNTIL LANDING
                         time.wait(16)
-                print 'takeoff'
+                print 'landing successful'
 
 	drone.at(libardrone.at_pcmd, True, currentV[0], currentV[1], currentV[2], currentY)
 	return currentV, currentY
@@ -96,16 +96,16 @@ def main():
             time.wait(33)
             print drone.navdata
 
-	LP.LedCtrlString( 'UNBLOCKED', 0, 3, -1 )
+	LP.LedCtrlString( 'UB', 0, 3, -1 )
 
         if 'emergency_mask' in drone.navdata['drone_state']:
-                while drone.navdata['emergency_mask'] == 1:
+                while drone.navdata['drone_state']['emergency_mask'] == 1:
                         print 'resetting'
                         drone.reset()
                         time.wait(16)
                 print 'reset'
 
-	LP.LedCtrlString( 'READY', 3, 0, 1 )
+	LP.LedCtrlString( 'RY', 3, 0, 1 )
 
 
 	#controller, sequencer, stable
