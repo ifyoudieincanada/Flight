@@ -5,6 +5,15 @@ import time
 import struct
 import json
 
+def handleButton(but):
+	scale = 128
+	strengthX = (but[0] - 4)*scale/4
+	strengthY = (but[1] - 4)*scale/4
+
+def stabalizeParrot():
+	pass
+	#stabalize the drone (probably make a parrot object)
+
 def main():
 
 	LP = launchpad.Launchpad()  # creates a Launchpad instance (first Launchpad found)
@@ -18,14 +27,16 @@ def main():
 	#controller, sequencer, stable
 	mode = "controller"
 
+	prevBut = LP.ButtonStateXY()
+
 	print "Checking for presses. 'arm' to end."
 	while True:
 		time.wait( 10 )
 
 		# Read from the fifo
-	    n = struct.unpack('I', f.read(4))[0]    # Read str length
-	    j = json.loads(f.read(n))               # Read str as JSON
-	    f.seek(0)                               # Important!!!
+		n = struct.unpack('I', f.read(4))[0]    # Read str length
+		j = json.loads(f.read(n))               # Read str as JSON
+		f.seek(0)                               # Important!!!
 
 		but = LP.ButtonStateXY()
 		if but != []:
@@ -34,6 +45,12 @@ def main():
 				#big controller :^)
 				LP.LedCtrlXY( but[0], but[1], 0, 3 )
 				print( but )
+				if but[2]:
+					if but != prevBut:
+						handleButton(but)
+					else:
+						stabalizeParrot()
+					prevBut = but
 				if but[2] == False:
 					LP.LedCtrlXY( but[0], but[1], 0, 0 )
 
