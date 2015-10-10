@@ -61,7 +61,7 @@ class ARDrone(object):
         self.video_pipe, video_pipe_other = multiprocessing.Pipe()
         self.nav_pipe, nav_pipe_other = multiprocessing.Pipe()
         self.com_pipe, com_pipe_other = multiprocessing.Pipe()
-        self.network_process = arnetwork.ARDroneNetworkProcess(nav_pipe_other, video_pipe_other, com_pipe_other)
+        self.network_process = arnetwork.ARDroneNetworkProcess(nav_pipe_other, video_pipe_other, com_pipe_other, ip)
         self.network_process.start()
         self.ipc_thread = arnetwork.IPCThread(self)
         self.ipc_thread.start()
@@ -320,6 +320,7 @@ def at(command, seq, params, ip):
     msg = "AT*%s=%i%s\r" % (command, seq, param_str)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.sendto(msg, (ip, ARDRONE_COMMAND_PORT))
+    print '\n\n\nsent msg: ', msg, '\n\n\nto: ', ip, 'port: ', ARDRONE_COMMAND_PORT
 
 def f2i(f):
     """Interpret IEEE-754 floating-point value as signed integer.

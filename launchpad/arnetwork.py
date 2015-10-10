@@ -39,22 +39,23 @@ class ARDroneNetworkProcess(multiprocessing.Process):
     data and sends it to the IPCThread.
     """
 
-    def __init__(self, nav_pipe, video_pipe, com_pipe):
+    def __init__(self, nav_pipe, video_pipe, com_pipe, ip):
         multiprocessing.Process.__init__(self)
         self.nav_pipe = nav_pipe
         self.video_pipe = video_pipe
         self.com_pipe = com_pipe
+        self.ip = ip
 
     def run(self):
         video_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         video_socket.setblocking(0)
         video_socket.bind(('', libardrone.ARDRONE_VIDEO_PORT))
-        video_socket.sendto("\x01\x00\x00\x00", ('192.168.1.1', libardrone.ARDRONE_VIDEO_PORT))
+        video_socket.sendto("\x01\x00\x00\x00", (self.ip, libardrone.ARDRONE_VIDEO_PORT))
 
         nav_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         nav_socket.setblocking(0)
         nav_socket.bind(('', libardrone.ARDRONE_NAVDATA_PORT))
-        nav_socket.sendto("\x01\x00\x00\x00", ('192.168.1.1', libardrone.ARDRONE_NAVDATA_PORT))
+        nav_socket.sendto("\x01\x00\x00\x00", (self.ip, libardrone.ARDRONE_NAVDATA_PORT))
 
         stopping = False
         while not stopping:
@@ -79,6 +80,7 @@ class ARDroneNetworkProcess(multiprocessing.Process):
                             # continue with the last one
                             break
                     navdata = libardrone.decode_navdata(data)
+                    print navdata
                     self.nav_pipe.send(navdata)
                 elif i == self.com_pipe:
                     _ = self.com_pipe.recv()
@@ -92,7 +94,7 @@ class IPCThread(threading.Thread):
     """Inter Process Communication Thread.
 
     This thread collects the data from the ARDroneNetworkProcess and forwards
-    it to the ARDreone.
+    it to the ARDrone.
     """
 
     def __init__(self, drone):
