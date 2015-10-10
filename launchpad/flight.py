@@ -1,9 +1,8 @@
-import random
+#!/usr/bin/env python2
+
 import launchpad
 from pygame import time
-import time
-import struct
-import json
+# import json
 import libardrone
 import socket
 
@@ -34,20 +33,21 @@ def handleButton(but, drone, currentV, currentY):
 	elif ((but[0] == 2 or but[0] == 3) and but[1] == 0):
 		currentY = ((but[0]-2)*2-1) + currentY
 	elif (but == (4, 0, True)):
-		currentV, currentY = stabilizeParrot()
+		currentV, currentY = stabilizeParrot(drone)
 	elif (but == (8, 8, True)):
 		drone.takeoff()
 	elif (but == (8, 5, True)):
 		drone.land()
 
-	drone.at(drone.at_pcmd, True, curretyV[0], currentV[1], currentV[2], currentY)
+	drone.at(drone.at_pcmd, True, currentV[0], currentV[1], currentV[2], currentY)
 	return currentV, currentY
 
-def stabilizeParrot():
+def stabilizeParrot(drone):
 	drone.hover()
 	return [0, 0, 0], 0
 
 def readFromSocket(s):
+        MSGLEN = 4
 	chunks = []
 	bytes_recd = 0
 	while bytes_recd < MSGLEN:
@@ -66,7 +66,7 @@ def main():
 	drone = libardrone.ARDrone("192.168.1.1")
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.bind(('localhost'), 4500)
+	s.bind(('localhost', 4500))
 	s.listen(3)
 
 	#LP.LedCtrlString( 'g', 0, 3, -1 )
@@ -82,7 +82,7 @@ def main():
 	while True:
 		time.wait( 10 )
 
-		j = json.loads(readFromSocket(s))               # Read socket as json
+		# j = json.loads(readFromSocket(s))               # Read socket as json
 
 		but = LP.ButtonStateXY()
 		if but != []:
@@ -102,7 +102,7 @@ def main():
 
 				LP.LedCtrlXY(6, 0, 3, 0)
 			if mode == "stable":
-				currentV = stabilizeParrot()
+				currentV = stabilizeParrot(drone)
 
 				LP.LedCtrlXY(4, 0, 3, 0)
 
