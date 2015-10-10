@@ -47,7 +47,7 @@ def handleButton(but, drone, currentV, currentY):
 	elif (but == [8, 5, True]):
                 while drone.navdata['fly_mask'] == 1:
                         print('taking off')
-		        drone.land() # REPEAT UNTIL TAKEOFF
+		        drone.land() # REPEAT UNTIL LANDING
                         time.wait(16)
                 print 'takeoff'
 
