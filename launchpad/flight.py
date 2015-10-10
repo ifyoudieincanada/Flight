@@ -9,6 +9,9 @@ import libardrone
 def handleButton(but, drone, currentV, currentY):
 	scale = 0.2 #what scale is this (from example)
 	vert = 0.05 #what scale is this (from example)
+
+        print 'navdata: ', drone.navdata
+
 	if (but[1] > 0 and but[0] < 8):
 		if (but[0] < 4):
 			sX = (but[0] - 4)*scale
@@ -39,13 +42,13 @@ def handleButton(but, drone, currentV, currentY):
 		currentV, currentY = stabilizeParrot(drone)
                 print 'stabilize'
 	elif (but == [8, 8, True]):
-                while drone.navdata['fly_mask'] == 0:
+                while drone.navdata['drone_state']['fly_mask'] == 0:
                         print('taking off')
 		        drone.takeoff() # REPEAT UNTIL TAKEOFF
                         time.wait(16)
                 print 'takeoff'
 	elif (but == [8, 5, True]):
-                while drone.navdata['fly_mask'] == 1:
+                while drone.navdata['drone_state']['fly_mask'] == 1:
                         print('taking off')
 		        drone.land() # REPEAT UNTIL TAKEOFF
                         time.wait(16)
@@ -72,27 +75,38 @@ def readFromSocket(s):
 	return ''.join(chunks)
 
 def main():
+        print 'main started'
 
+        print 'connecting to launchpad'
 	LP = launchpad.Launchpad()  # creates a Launchpad instance (first Launchpad found)
+        print 'connected, opening launchpad'
 	LP.Open()                   # start it
+        print 'opened, reset launchpad'
         LP.Reset()
+        print 'reset'
 
         print 'connecting to drone'
 	drone = libardrone.ARDrone("192.168.1.1")
         print 'connected'
 
-        while drone.navdata['emergency_mask'] == 1:
-                print 'resetting'
-                drone.reset()
-                time.wait(16)
-        print 'reset'
+        print 'asking for navdata'
+        print drone.navdata
 
-	# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	# s.bind(('localhost', 4500))
-	# s.listen(3)
+        while not drone.navdata:
+            time.wait(33)
+            print drone.navdata
 
-	#LP.LedCtrlString( 'g', 0, 3, -1 )
-	#LP.LedCtrlString( 'g', 3, 0, 1 )
+	LP.LedCtrlString( 'UNBLOCKED', 0, 3, -1 )
+
+        if 'emergency_mask' in drone.navdata['drone_state']:
+                while drone.navdata['emergency_mask'] == 1:
+                        print 'resetting'
+                        drone.reset()
+                        time.wait(16)
+                print 'reset'
+
+	LP.LedCtrlString( 'READY', 3, 0, 1 )
+
 
 	#controller, sequencer, stable
 	mode = "controller"
@@ -103,8 +117,6 @@ def main():
 	print "Checking for presses. 'arm' to end."
 	while True:
 		time.wait(10)
-
-		# j = json.loads(readFromSocket(s))               # Read socket as json
 
 		but = LP.ButtonStateXY()
 		if but != []:

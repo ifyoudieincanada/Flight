@@ -80,7 +80,7 @@ class ARDroneNetworkProcess(multiprocessing.Process):
                             # continue with the last one
                             break
                     navdata = libardrone.decode_navdata(data)
-                    print navdata
+                    print 'navdata being sent'
                     self.nav_pipe.send(navdata)
                 elif i == self.com_pipe:
                     _ = self.com_pipe.recv()
@@ -107,13 +107,16 @@ class IPCThread(threading.Thread):
             inputready, outputready, exceptready = select.select([self.drone.video_pipe, self.drone.nav_pipe], [], [], 1)
             for i in inputready:
                 if i == self.drone.video_pipe:
+                    # print 'video pipe'
                     while self.drone.video_pipe.poll():
                         image = self.drone.video_pipe.recv()
                     self.drone.image = image
                 elif i == self.drone.nav_pipe:
+                    # print 'nav pipe'
                     while self.drone.nav_pipe.poll():
                         navdata = self.drone.nav_pipe.recv()
                     self.drone.navdata = navdata
+                    print 'setting navdata'
 
     def stop(self):
         """Stop the IPCThread activity."""

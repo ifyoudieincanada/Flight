@@ -320,7 +320,7 @@ def at(command, seq, params, ip):
     msg = "AT*%s=%i%s\r" % (command, seq, param_str)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.sendto(msg, (ip, ARDRONE_COMMAND_PORT))
-    print '\n\n\nsent msg: ', msg, '\n\n\nto: ', ip, 'port: ', ARDRONE_COMMAND_PORT
+    # print '\n\n\nsent msg: ', msg, '\n\n\nto: ', ip, 'port: ', ARDRONE_COMMAND_PORT
 
 def f2i(f):
     """Interpret IEEE-754 floating-point value as signed integer.
